@@ -1,0 +1,154 @@
+export default class Result {
+  // default value (if not specified): public
+  // public: If the code that would instantiate Result will access the value
+  // private: If we want the value to be "hidden" in the implementation.
+  constructor(
+    public input: string = '',
+    private unconsumedStrings: Array<string> = [],
+    private values: Array<string> = []) {}
+
+  // Although Typescript infers the types returned when compiling,
+  // is a good practice to make that explicit:
+  // You could also say:
+  // push (value: string, unconsumedString: string): this {
+  // But this is specific to situations in which the function returns a reference
+  // to a this object.
+  // Types can be: Classes, native types (number, string, boolean, function),
+  // arrays, object or interfaces
+  push (value: string, unconsumedString: string): Result {
+    this.values.push(value)
+    this.unconsumedStrings.push(unconsumedString)
+    return this
+  }
+
+  // By the name of the argument, result, and the name of the current class
+  // Result, we may infere that the argument is of said type.
+  // To check the return type, we will have to check the reduce function in 
+  // this same class.
+  // Because reduce returns an Array<string>, this function will do so too.
+  // In this case, we can see why specifying the return type is useful:
+  // If we didn't do so, to know it, we would have to go to the reduce function
+  // And check what's in there. Because in Typescript we can write as part of the 
+  // code, we can skip that step.
+  concat (result: Result): Array<string> {
+    // This will return the result of result.reduce.
+    return result.reduce((prev: Result, value: string, uString: string) => 
+      prev.push(value, uString), Result.copy(this))
+  }
+  
+  // The only thing missing here is the return type
+  entries (): Array<Array<string>> {
+    // The spread operator will grab the result of an iterator. In this case,
+    // We can check that result in the function *[ Symbol.iterator ]
+    return [...this]
+  }
+
+  // forEach receives a function. We can see in it's implementation that 
+  // it will receive two arguments as strings. We know because of the iteator
+  // that these two strings are a value and an unconsumedString
+  // Because it will be used in the forEach function of an Array, we know it 
+  // returns nothing.
+  // Because the result of this function is the result of Array.forEach, we know
+  // it wil return nothing (type void).
+  forEach (fn: (value: string, unconsumedString: string) => void): void {
+    // Doing ...pair will spread the content of pair (an array) as the arguments
+    // for that function. In this case, we know htat pair has two items, so the
+    // function will have two arguments. But if it had three, it will have three.
+    this.entries().forEach((pair) => fn(...pair))
+  }
+
+  // Similar comments as of forEach
+  // Type parameters if for cases in which you want to create a function whose
+  // return type depends on external reasons.
+  // For example, here the return type of map is an array of the same type as 
+  // the return type of the function that receives. We can express that by using
+  // type parameters. An usage example:
+  //
+  // const result = new Result('input');
+  // result.map[number]((value: string, unconsumedString: string) =>
+  //   parseInt(value));
+  //
+  // In this case, we are specifying that the return type of the function send
+  // as parameter is a number and therefore, the return type of map will be
+  // an Array<number>
+  map[T] (fn: (value: string, unconsumendString: string) => T): Array<T> {
+    return this.entries().map((pair) => fn(...pair))
+  }
+  
+  An example of this using javascript:
+  
+  [1,2,3].map(n => n.toString())
+  
+  Would be in Typescript:
+  [1,2,3].map[string](n => n.toString())
+  
+  // example forEach implementation
+  const items = []
+  items.forEach(function(item) {
+    // do something with item
+  })
+
+  // In this case:
+  const result = new Result('some input')
+  // Usually, in an array, every item is good by itself.
+  // In this case, Result represents the result of a parser https://en.wikipedia.org/wiki/Parser_combinator
+  // Said results usually come in pairs: a value in an string and the rest of the
+  // string.
+  // For example: Having the input `123 apples` and a parser that grabs only the 
+  // numeric value, we want a result with the form: ('123', ' apples'). Where 
+  // 123 is the value and ' apples' the unconsumedString.
+  // The reason for having 2 arguments is because the Symbol.iterator has 2 items
+  // In the array: Value and unconsmedString
+  result.forEach(function(value, unconsumedString) {
+    // do something with them
+  })
+}
+
+// Using `[]` will match any array of any type.
+// When we know the type that the array expects is a good practice to specify it.
+// [] and Array are similar, but not the same. The main practical difference is 
+// that [] expect an array with items and Array may be empty.
+
+// usually
+const array = []
+array.push('somevalues')
+
+// in this example we have
+push() {
+  
+}
+
+
+// Context: Result is an object that represents the result of a parser.
+const res = new Result('some string as input')
+
+res
+  .push('value', 'unconsumedString')
+  .push('anotherValue', 'unconsumedString')
+  
+/**
+ * Concatenates two results
+ * @param  {Result} result result to concatenate
+ * @return {Result} this result
+ */
+
+
+class NewIterator {
+  constructor () {
+    this.array = [1,2,3]
+  }
+  
+  // converts a class into something iterable
+  // That can be explored using for (... of ...)
+  *[ Symbol.iterator ]() {
+    for (const item of array) {
+      yield item
+    }
+  }
+}
+
+const newIterator = new NewIterator();
+for (const item of newIterator) {
+  //Output will be: 1 2 3
+  console.log(item)
+}
